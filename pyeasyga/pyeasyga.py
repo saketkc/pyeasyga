@@ -6,6 +6,7 @@
 
 import random
 import copy
+import numpy as np
 from operator import attrgetter
 
 from six.moves import range
@@ -35,6 +36,7 @@ class GeneticAlgorithm(object):
 
     def __init__(self,
                  seed_data,
+                 initial_seed_probability=0.5,
                  population_size=50,
                  generations=100,
                  crossover_probability=0.8,
@@ -45,6 +47,7 @@ class GeneticAlgorithm(object):
 
         :param seed_data: input data to the Genetic Algorithm
         :type seed_data: list of objects
+        :param float initial_seed_probability: probability of 1s in the initial population
         :param int population_size: size of population
         :param int generations: number of generations to evolve
         :param float crossover_probability: probability of crossover operation
@@ -54,6 +57,7 @@ class GeneticAlgorithm(object):
 
         self.seed_data = seed_data
         self.population_size = population_size
+        self.initial_seed_probability = initial_seed_probability
         self.generations = generations
         self.crossover_probability = crossover_probability
         self.mutation_probability = mutation_probability
@@ -62,7 +66,7 @@ class GeneticAlgorithm(object):
 
         self.current_generation = []
 
-        def create_individual(seed_data):
+        def create_individual(seed_data, seed_probability=0.5):
             """Create a candidate solution representation.
 
             e.g. for a bit array representation:
@@ -70,11 +74,15 @@ class GeneticAlgorithm(object):
             >>> return [random.randint(0, 1) for _ in range(len(data))]
 
             :param seed_data: input data to the Genetic Algorithm
+            :param float seed_probability: probability of 1s
             :type seed_data: list of objects
             :returns: candidate solution representation as a list
 
             """
-            return [random.randint(0, 1) for _ in range(len(seed_data))]
+            return np.random.choice([0, 1],
+                                    size=len(seed_data),
+                                    p=[1-seed_probability,
+                                       seed_probability]).tolist()
 
         def crossover(parent_1, parent_2):
             """Crossover (mate) two parents to produce two children.
@@ -123,7 +131,7 @@ class GeneticAlgorithm(object):
         """
         initial_population = []
         for _ in range(self.population_size):
-            genes = self.create_individual(self.seed_data)
+            genes = self.create_individual(self.seed_data, self.initial_seed_probability)
             individual = Chromosome(genes)
             initial_population.append(individual)
         self.current_generation = initial_population
